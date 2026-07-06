@@ -3,42 +3,85 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="abigmelon 的个人主页，记录 Java 后端开发、数据结构与算法学习。">
   <title>abigmelon</title>
+  <link rel="preconnect" href="https://github.com">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="page">
-    <section class="intro">
-      <img class="avatar" src="https://github.com/abigmelon.png" alt="abigmelon 的头像">
+  <main class="site-shell">
+    <section class="hero" aria-labelledby="profile-title">
+      <div class="avatar-wrap">
+        <img class="avatar" src="https://github.com/abigmelon.png" alt="abigmelon 的头像">
+      </div>
 
-      <p class="eyebrow">Hello, I am</p>
-      <h1>abigmelon</h1>
-      <p class="summary">
-        <a href="https://my.feishu.cn/wiki/VVv1w0kCzirT04kmHwKc5PDWnBg">可以参考的学习路径文档</a>
-      </p>
+      <div class="hero-content">
+        <p class="eyebrow">BUAA · Class of 2029</p>
+        <h1 id="profile-title">abigmelon</h1>
+        <p class="intro">
+          BUAA 2029 届本科生，正在学习 Java 后端开发、数据结构与算法。这里会逐步整理我的学习记录、项目实践和一些技术笔记。
+        </p>
 
-      <div class="links">
-        <a href="https://github.com/abigmelon">GitHub 主页</a>
+        <div class="contact-row" aria-label="联系方式">
+          <a href="mailto:25371330@buaa.edu.cn">25371330@buaa.edu.cn</a>
+          <a href="https://github.com/abigmelon">GitHub</a>
+        </div>
       </div>
     </section>
 
-    <section class="projects" aria-labelledby="projects-title">
-      <h2 id="projects-title">abigmelon的仓库</h2>
+    <section class="learning" aria-labelledby="learning-title">
+      <div class="section-heading">
+        <p class="section-kicker">Now building</p>
+        <h2 id="learning-title">正在学习</h2>
+      </div>
 
-      <div class="project-list">
-        <a class="project-card" href="https://github.com/abigmelon/JavaSE">
-          <span>JavaSE</span>
-          <p>Java 基础语法、面向对象与每周学习复盘。</p>
+      <div class="track-list">
+        <article class="track-item">
+          <span class="track-dot" aria-hidden="true"></span>
+          <div>
+            <h3>Java 后端开发</h3>
+            <p>从 Java 基础、面向对象到 Web 后端工程实践。</p>
+          </div>
+        </article>
+
+        <article class="track-item">
+          <span class="track-dot" aria-hidden="true"></span>
+          <div>
+            <h3>数据结构与算法</h3>
+            <p>用代码和题目训练基本功，沉淀清晰的解题思路。</p>
+          </div>
+        </article>
+
+        <article class="track-item">
+          <span class="track-dot" aria-hidden="true"></span>
+          <div>
+            <h3>数据库与工具链</h3>
+            <p>逐步补齐数据库、Git、Linux 与日常开发工具。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="next" aria-labelledby="next-title">
+      <div class="section-heading">
+        <p class="section-kicker">Growing space</p>
+        <h2 id="next-title">之后会放在这里</h2>
+      </div>
+
+      <div class="future-grid">
+        <a class="future-card" href="https://github.com/abigmelon?tab=repositories">
+          <span>Projects</span>
+          <p>后端小项目、课程练习和阶段性实践。</p>
         </a>
 
-        <a class="project-card" href="https://github.com/abigmelon/data-structures">
-          <span>Data Structures</span>
-          <p>数据结构课程代码、实验练习与基础算法实现。</p>
+        <a class="future-card" href="https://github.com/abigmelon">
+          <span>Notes</span>
+          <p>Java、算法和计算机基础的学习笔记。</p>
         </a>
 
-        <a class="project-card" href="https://github.com/abigmelon/LeetCode-Hot100">
-          <span>LeetCode Hot 100</span>
-          <p>力扣 Hot 100 刷题记录、思路整理与代码练习。</p>
+        <a class="future-card" href="https://github.com/abigmelon">
+          <span>Lab</span>
+          <p>一些小实验、工具和有意思的尝试。</p>
         </a>
       </div>
     </section>
