@@ -1,69 +1,48 @@
-const fallbackPosts = [
-  { slug: "sqlfinder-notes", title: "SQLFINDER：从一句话到一条查询", date: "2026-10-12", excerpt: "记录我第一次把自然语言、SQL 生成和结果展示串成一个可运行工具的过程。", tags: ["项目拆解", "Java"] }
-];
-
-const fallbackBodies = {
-  "sqlfinder-notes": `# SQLFINDER：从一句话到一条查询
-
-SQLFINDER 是我最近在做的一个小工具：用户输入自然语言问题，系统生成 SQL，执行查询，再把结果展示出来。这个项目让我第一次把后端接口、数据库和一个具体的用户问题放在同一条链路里思考。
-
-## 为什么从问数开始
-
-数据库里的信息很多，但“知道应该怎么查”本身就需要经验。SQLFINDER 想先把这段经验变成可以被观察、被修改的中间结果：生成的 SQL 会直接展示出来，查询结果也会保留原始表格结构。
-
-## 目前的链路
-
-- 接收用户的自然语言问题
-- 根据表结构生成 SQL
-- 执行查询并返回结果
-- 在页面中同时展示 SQL 和数据
-
-## 下一步
-
-我会继续补齐错误提示、查询安全和更细的结果解释。先让每一条查询都能被看懂，再让它变得更快。`
-};
-
 const postList = document.querySelector("#post-list");
 const postCount = document.querySelector("#post-count");
-const pageSections = [...document.querySelectorAll("main > section")];
 
 function escapeHtml(value) {
-  return value.replace(/[&<>\"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
+  return String(value).replace(/[&<>\"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
 }
 
-function inlineMarkdown(value) {
-  return escapeHtml(value)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-}
+function renderArticleMarkdown(markdown, fallbackTitle) {
+  const tokens = marked.lexer(markdown, { gfm: true });
+  const firstContentIndex = tokens.findIndex((token) => token.type !== "space");
+  const firstContent = tokens[firstContentIndex];
+  let title = fallbackTitle;
 
-function markdownToHtml(markdown) {
-  const lines = markdown.replaceAll("\r", "").split("\n");
-  const html = [];
-  let paragraph = [];
-  let list = false;
-  let code = false;
-  let codeLines = [];
+  // Use a leading Markdown H1 as the page title instead of showing two titles.
+  if (firstContent?.type === "heading" && firstContent.depth === 1) {
+    const titleElement = document.createElement("div");
+    titleElement.innerHTML = DOMPurify.sanitize(marked.parseInline(firstContent.text));
+    title = titleElement.textContent;
+    tokens.splice(firstContentIndex, 1);
+  }
 
-  const flushParagraph = () => {
-    if (paragraph.length) { html.push(`<p>${inlineMarkdown(paragraph.join(" "))}</p>`); paragraph = []; }
-  };
-  const closeList = () => { if (list) { html.push("</ul>"); list = false; } };
-  const closeCode = () => { if (code) { html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`); code = false; codeLines = []; } };
+  const headingIds = new Set();
+  class ArticleRenderer extends marked.Renderer {
+    heading(token) {
+      const content = this.parser.parseInline(token.tokens);
+      const textElement = document.createElement("div");
+      textElement.innerHTML = DOMPurify.sanitize(content);
+      // Match GitHub-style fragments used in hand-written contents lists.
+      const base = textElement.textContent.trim().toLowerCase()
+        .replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "").replace(/\s/g, "-") || "section";
+      let id = base;
+      let suffix = 0;
+      while (headingIds.has(id)) id = `${base}-${++suffix}`;
+      headingIds.add(id);
+      const depth = Math.max(2, token.depth);
+      return `<h${depth} id="${escapeHtml(id)}">${content}</h${depth}>\n`;
+    }
 
-  lines.forEach((line) => {
-    if (line.trim().startsWith("```")) { flushParagraph(); closeList(); if (code) closeCode(); else code = true; return; }
-    if (code) { codeLines.push(line); return; }
-    if (!line.trim()) { flushParagraph(); closeList(); return; }
-    if (line.startsWith("## ")) { flushParagraph(); closeList(); html.push(`<h2>${inlineMarkdown(line.slice(3))}</h2>`); return; }
-    if (line.startsWith("### ")) { flushParagraph(); closeList(); html.push(`<h3>${inlineMarkdown(line.slice(4))}</h3>`); return; }
-    if (line.startsWith("# ")) { flushParagraph(); closeList(); html.push(`<h1>${inlineMarkdown(line.slice(2))}</h1>`); return; }
-    if (line.startsWith("- ")) { flushParagraph(); if (!list) { html.push("<ul>"); list = true; } html.push(`<li>${inlineMarkdown(line.slice(2))}</li>`); return; }
-    paragraph.push(line.trim());
-  });
-  flushParagraph(); closeList(); closeCode();
-  return html.join("\n");
+    table(token) {
+      return `<div class="article-table" role="region" aria-label="文章表格，可横向滚动" tabindex="0">${super.table(token)}</div>\n`;
+    }
+  }
+
+  const html = marked.parser(tokens, { gfm: true, renderer: new ArticleRenderer() });
+  return { title, html: DOMPurify.sanitize(html, { USE_PROFILES: { html: true } }) };
 }
 
 function formatDate(value) {
@@ -77,26 +56,45 @@ function renderList(posts) {
 }
 
 async function getPosts() {
-  try { const response = await fetch("posts/index.json"); if (!response.ok) throw new Error("index unavailable"); return await response.json(); }
-  catch { return fallbackPosts; }
+  const response = await fetch("posts/index.json");
+  if (!response.ok) throw new Error("Article index unavailable");
+  return await response.json();
 }
 
 async function getBody(slug) {
-  try { const response = await fetch(`posts/${encodeURIComponent(slug)}.md`); if (!response.ok) throw new Error("post unavailable"); return await response.text(); }
-  catch { return fallbackBodies[slug] || "# 文章还在整理中\n\n这篇文章暂时还没有内容。"; }
+  const response = await fetch(`posts/${encodeURIComponent(slug)}.md`);
+  if (!response.ok) throw new Error("Article unavailable");
+  return await response.text();
+}
+
+function showArticleError(message) {
+  document.querySelector("main").innerHTML = `<article class="article-view page-wrap"><a class="article-back" href="./">← 返回首页</a><h1>暂时无法打开文章</h1><p class="article-body">${escapeHtml(message)}</p></article>`;
 }
 
 async function showArticle(slug, posts) {
   const post = posts.find((item) => item.slug === slug);
-  if (!post) return;
+  if (!post) { showArticleError("没有找到这篇文章，请返回首页选择其他文章。"); return; }
   const body = await getBody(slug);
-  document.querySelector("main").innerHTML = `<article class="article-view page-wrap"><a class="article-back" href="./">← 返回首页</a><p class="section-index">BLOG / ${formatDate(post.date)}</p><h1>${escapeHtml(post.title)}</h1><p class="article-meta">${post.tags.map((tag) => `#${escapeHtml(tag)}`).join("  ")}</p><div class="article-body">${markdownToHtml(body)}</div></article>`;
-  document.title = `${post.title} — abigmelon`;
-  window.scrollTo(0, 0);
+  const article = renderArticleMarkdown(body, post.title);
+  document.querySelector("main").innerHTML = `<article class="article-view page-wrap"><a class="article-back" href="./">← 返回首页</a><p class="section-index">BLOG / ${formatDate(post.date)}</p><h1>${escapeHtml(article.title)}</h1><p class="article-meta">${post.tags.map((tag) => `#${escapeHtml(tag)}`).join("  ")}</p><div class="article-body">${article.html}</div></article>`;
+  document.title = `${article.title} — abigmelon`;
+  document.querySelector(".brand").href = "./#top";
+  document.querySelectorAll('.site-nav a[href^="#"]').forEach((link) => {
+    link.setAttribute("href", `./${link.getAttribute("href")}`);
+  });
+  const fragment = window.location.hash.slice(1);
+  let target;
+  try { target = document.getElementById(decodeURIComponent(fragment)); } catch { /* Ignore malformed fragments. */ }
+  if (target) target.scrollIntoView(); else window.scrollTo(0, 0);
 }
 
 (async function init() {
-  const posts = await getPosts();
   const slug = new URLSearchParams(window.location.search).get("post");
-  if (slug) await showArticle(slug, posts); else renderList(posts);
+  try {
+    const posts = await getPosts();
+    if (slug) await showArticle(slug, posts); else renderList(posts);
+  } catch {
+    if (slug) showArticleError("文章加载失败，请刷新页面后重试。");
+    else postList.innerHTML = '<p class="empty-state">文章列表加载失败，请刷新页面后重试。</p>';
+  }
 })();
