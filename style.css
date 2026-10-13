@@ -63,6 +63,7 @@ h1 { margin-bottom: 23px; font-size: clamp(48px, 8vw, 92px); line-height: 1; let
 .section { display: grid; grid-template-columns: minmax(220px, .65fr) minmax(0, 1.35fr); gap: 78px; padding: 90px 0 100px; border-bottom: 1px solid var(--line); }
 .section-index { margin: 0 0 20px; color: var(--accent); font-size: 10px; letter-spacing: .1em; }
 .section-intro h2 { max-width: 280px; margin-bottom: 19px; font-size: clamp(31px, 4vw, 48px); line-height: 1.1; letter-spacing: -.05em; font-weight: 600; }
+#projects .section-intro h2 { max-width: none; font-size: clamp(28px, 3vw, 38px); white-space: nowrap; }
 .section-note { max-width: 245px; margin: 0; color: var(--quiet); font-size: 14px; line-height: 1.75; }
 .project-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .72fr); border: 1px solid var(--line-strong); background: rgba(255, 250, 246, .74); }
 .project-main { display: flex; flex-direction: column; align-items: flex-start; padding: 30px 33px; }
