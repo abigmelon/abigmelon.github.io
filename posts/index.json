@@ -1,0 +1,9 @@
+[
+  {
+    "slug": "sqlfinder-notes",
+    "title": "SQLFINDER：从一句话到一条查询",
+    "date": "2026-10-12",
+    "excerpt": "记录我第一次把自然语言、SQL 生成和结果展示串成一个可运行工具的过程。",
+    "tags": ["项目拆解", "Java"]
+  }
+]
